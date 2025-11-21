@@ -1,0 +1,19 @@
+In reality most of developers think that database that stores 50 tables with 2m rows each is high load db,
+but in reality it is not. it's kind a 1 year old kid and if you have problems with this sized db you must learn how to handle data.
+real problematic DBs starts at TB and higher usually described above amount it could be 1 minute of server work
+Usually such systems have many Slaves many Masters partitions even structures of no single source of truth
+In such cases there could be partitions grouped by Client // DateTime // TimePeriod won't dive to deep in this paragraph
+as it will consume all free time and give only a bit more information
+
+You can use CRC32 algorithms to optimize full text search for example you have email dev@maris-locmelis.lv and you need to find it
+you can add CRC32 field representing CRC32(dev@maris-locmelis.lv) and it will give integer that will decrease record search
+from 128 varchar field to int field and then 128 field (for less than 0.000001% records)
+also you can partition using CRC32 alg
+on high load db checksums of (multiple filter crc32 or even SHA-128 is not like rocket science)
+some systems even requires combinations (crc32 than SHA-128) to make search in db with TB of data by filter combination matches or full text search
+won't work on LIKE things but if query have 5000 WHERES from 500 different tables with complex system you can group them using hashes.
+as example SELECT * FROM .. WHERE a = "n" AND b = "c" AND d = 1233 ... you can make hash for CONCAT(a, b, d .....) and this hash will filter 1 table
+with those hashes get 10 records and on 10 records will handle complex filtering and have 100% match (works only in strict comparison)
+
+Also there are schedulers and procedures and functions to solve complex multi query optimizations
+if you are full stack try to evade them (they make everything more complex)

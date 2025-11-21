@@ -1,0 +1,4 @@
+1. most common and probably best hotfix is caching results and resetting on change
+2. If you have many temporary data from multiple tables for any reason you can create templates and create table spam data than drop table (it will have high speed)
+3. If you have complex query multiple joins and huge dataset, and you can't imagine how to make optimal query you can use Aggregation tables. to store necessary data and update right before search (it will remove temp table creation and add persistent data for filters and work within no time)
+4. Insertion (Batches. Transactions.)

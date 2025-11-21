@@ -1,0 +1,7 @@
+SQL usually have multiple ways to debug the application I may not name all but I will touch best ones (IMHO).
+
+1. Explain (Query here)
+2. SHOW PROCESSLIST.
+3. slow_query_log = 1 // best to log all queries (5-10 minutes) than group analyze total execution time
+4. KILL PROCESSID (to identify deadlock parent usually oldest one but not always.)
+5. Usually low resources can lead to deadlocks (waiting for cache to get free. so resource analyze like top can be good also)

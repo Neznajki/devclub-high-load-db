@@ -1,0 +1,8 @@
+1. Hard Drives can give a heat (bad sectors // no time to write // during backups) right now not so huge problem due SSD.
+2. Master Slave Replication things (Primary Keys (Long, Int, UUID), scaling data sync).
+3. Deadlocks on huge request amount.
+4. Cache outage.
+5. Temporary tables.
+6. Complex Joins.
+7. Huge indexes.
+8. Wrong field data types.

@@ -1,0 +1,11 @@
+I selected MySQL DB only as I have most experience there mainly all SQL are more or less same so you can pick patterns from one to another.
+difference is syntax or some key features.
+
+Usually primary take away and what you should understand picking technology is how DB stores the data I will explain on MySQL example
+
+1. you describe fields (each field have type and limits on containing value)
+2. Each row reserves maximum field size on HDD even if they are null (to jump between limits based on pure math)
+3. Text Fields are storing Pointer to data that besides out of table (it is optimal but will slow down on filtering texts)
+4. Indexes takes time to save and can flood your cache (it may result as deadlocks)
+5. Indexes should be sorted.
+6. Data is pure math the more Bytes it takes the more time it makes for all operations

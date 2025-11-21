@@ -1,0 +1,16 @@
+There are tons of grouping functions like, AI may help with finding right approaches for your case
+
+With
+Union
+GROUP BY
+Distinct
+
+key takeaway from me would be that You should use them rarely better to use DISTINCT, MAX, ... and things like that
+if they are not suiting your need than go to GROUP BY. never use GROUP_CONCAT and things like that.
+You will ask why ? it's easy on huge datasets they will provide wrong info (You can't really rely on them)
+There are tons of options how you can utilize GROUP BY but usually it ends up with CREATE Temp table deadlocks.
+huge dataset index locks, complex scenarios where all PKs are blocked due to grouping logic that tries to allocate memory for TMP table
+
+Also use record result limiting always. even if you have no grouping, and pick good size of result sets.
+in low datasets you will be okay when you are limiting 100 records as you will have 50, in huge it will save your ass right away
+also there are Pagination and things like that that won't work with GROUPING logic this may lead to full table scan.

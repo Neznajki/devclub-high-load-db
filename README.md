@@ -1,1 +1,28 @@
 # devclub-high-load-db
+
+* theme high load systems
+* SQL database in them
+
+# introduction
+
+1. Key problems on high load DB.
+2. Importance of data structure.
+3. How to analyze and search for problem.
+4. How you can hotfix complex cases.
+5. How you can test DB load.
+6. Deadlocks how they work and how to find them.
+7. Some practices to keep Your DB at good shape.
+8. Capabilities of DB.
+
+# agenda.
+
+1. Introduction (30 secs)
+2. Database types (30 secs)
+3. How DB related to high load (30 secs)
+4. What types of DB are and why SQL (1 m) (SQL NoSQL InMemmory)
+5. Key problems on High Load and what common problems I met in SQL (5 m)
+6. DB will be MySQL (explaining how data structure works and what to consider for high load systems) 4m
+7. Explain, SQL, Logs, Show Processlist, resource relation to deadlocks. (2m 30 secs)
+8. Using Memory (Redis) for caching data, Templates, Aggregation tables (5 m)
+9. What data amount could be in High load systems how to optimize text fields (5m)
+10. Grouping functions how to use them (all left time probably 6m)
