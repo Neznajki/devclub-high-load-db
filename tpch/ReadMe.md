@@ -1,4 +1,4 @@
-# windows prepare db
+# windows prepare db (sf=10 will create db with size 10 GB instead of 1 GB records)
 ```shell
 git clone 
 
@@ -9,7 +9,7 @@ docker run --rm `
   -v "${OUT}:/out" `
   duckdb/duckdb:latest `
   duckdb -c "INSTALL tpch; LOAD tpch;
-      CALL dbgen(sf=10);
+      CALL dbgen(sf=1);
       COPY (SELECT * FROM nation)   TO '/out/nation.tbl'   WITH (HEADER false, DELIMITER '|');
       COPY (SELECT * FROM region)   TO '/out/region.tbl'   WITH (HEADER false, DELIMITER '|');
       COPY (SELECT * FROM part)     TO '/out/part.tbl'     WITH (HEADER false, DELIMITER '|');
@@ -25,25 +25,151 @@ docker run --rm `
 
 create schema
 
-SET sql_log_bin=0;
+    SET sql_log_bin=0;
 SET autocommit=0;
 SET foreign_key_checks=0;
 
 -- TPC-H tables (MySQL-friendly types)
-CREATE TABLE nation ( n_nationkey INT PRIMARY KEY, n_name CHAR(25), n_regionkey INT, n_comment VARCHAR(152) );
-CREATE TABLE region ( r_regionkey INT PRIMARY KEY, r_name CHAR(25), r_comment VARCHAR(152) );
-CREATE TABLE part   ( p_partkey INT PRIMARY KEY, p_name VARCHAR(55), p_mfgr CHAR(25), p_brand CHAR(10), p_type VARCHAR(25), p_size INT, p_container CHAR(10), p_retailprice DECIMAL(12,2), p_comment VARCHAR(23) );
-CREATE TABLE supplier ( s_suppkey INT PRIMARY KEY, s_name CHAR(25), s_address VARCHAR(40), s_nationkey INT, s_phone CHAR(15), s_acctbal DECIMAL(12,2), s_comment VARCHAR(101) );
-CREATE TABLE partsupp ( ps_partkey INT, ps_suppkey INT, ps_availqty INT, ps_supplycost DECIMAL(12,2), ps_comment VARCHAR(199), PRIMARY KEY(ps_partkey, ps_suppkey) );
-CREATE TABLE customer ( c_custkey INT PRIMARY KEY, c_name VARCHAR(25), c_address VARCHAR(40), c_nationkey INT, c_phone CHAR(15), c_acctbal DECIMAL(12,2), c_mktsegment CHAR(10), c_comment VARCHAR(117) );
-CREATE TABLE orders   ( o_orderkey BIGINT PRIMARY KEY, o_custkey INT, o_orderstatus CHAR(1), o_totalprice DECIMAL(12,2), o_orderdate DATE, o_orderpriority CHAR(15), o_clerk CHAR(15), o_shippriority INT, o_comment VARCHAR(79) );
-CREATE TABLE lineitem ( l_orderkey BIGINT, l_partkey INT, l_suppkey INT, l_linenumber INT,
-l_quantity DECIMAL(12,2), l_extendedprice DECIMAL(12,2),
-l_discount DECIMAL(12,2), l_tax DECIMAL(12,2),
-l_returnflag CHAR(1), l_linestatus CHAR(1),
-l_shipdate DATE, l_commitdate DATE, l_receiptdate DATE,
-l_shipinstruct CHAR(25), l_shipmode CHAR(10), l_comment VARCHAR(44),
-PRIMARY KEY(l_orderkey, l_linenumber) );
+CREATE TABLE region (
+                        r_regionkey INT PRIMARY KEY,
+                        r_name CHAR(25),
+                        r_comment VARCHAR(152)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Nation -> Region
+CREATE TABLE nation (
+                        n_nationkey INT PRIMARY KEY,
+                        n_name CHAR(25),
+                        n_regionkey INT NOT NULL,
+                        n_comment VARCHAR(152),
+                        KEY idx_nation_region (n_regionkey),
+                        CONSTRAINT fk_nation_region
+                            FOREIGN KEY (n_regionkey) REFERENCES region(r_regionkey)
+                                ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Part (parent of PartSupp + LineItem)
+CREATE TABLE part (
+                      p_partkey INT PRIMARY KEY,
+                      p_name VARCHAR(55),
+                      p_mfgr CHAR(25),
+                      p_brand CHAR(10),
+                      p_type VARCHAR(25),
+                      p_size INT,
+                      p_container CHAR(10),
+                      p_retailprice DECIMAL(12,2),
+                      p_comment VARCHAR(23)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Supplier -> Nation
+CREATE TABLE supplier (
+                          s_suppkey INT PRIMARY KEY,
+                          s_name CHAR(25),
+                          s_address VARCHAR(40),
+                          s_nationkey INT NOT NULL,
+                          s_phone CHAR(15),
+                          s_acctbal DECIMAL(12,2),
+                          s_comment VARCHAR(101),
+                          KEY idx_supplier_nation (s_nationkey),
+                          CONSTRAINT fk_supplier_nation
+                              FOREIGN KEY (s_nationkey) REFERENCES nation(n_nationkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Customer -> Nation
+CREATE TABLE customer (
+                          c_custkey INT PRIMARY KEY,
+                          c_name VARCHAR(25),
+                          c_address VARCHAR(40),
+                          c_nationkey INT NOT NULL,
+                          c_phone CHAR(15),
+                          c_acctbal DECIMAL(12,2),
+                          c_mktsegment CHAR(10),
+                          c_comment VARCHAR(117),
+                          KEY idx_customer_nation (c_nationkey),
+                          CONSTRAINT fk_customer_nation
+                              FOREIGN KEY (c_nationkey) REFERENCES nation(n_nationkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Orders -> Customer
+CREATE TABLE orders (
+                        o_orderkey BIGINT PRIMARY KEY,
+                        o_custkey INT NOT NULL,
+                        o_orderstatus CHAR(1),
+                        o_totalprice DECIMAL(12,2),
+                        o_orderdate DATE,
+                        o_orderpriority CHAR(15),
+                        o_clerk CHAR(15),
+                        o_shippriority INT,
+                        o_comment VARCHAR(79),
+                        KEY idx_orders_customer (o_custkey),
+                        CONSTRAINT fk_orders_customer
+                            FOREIGN KEY (o_custkey) REFERENCES customer(c_custkey)
+                                ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- PartSupp -> Part + Supplier (composite PK)
+CREATE TABLE partsupp (
+                          ps_partkey INT NOT NULL,
+                          ps_suppkey INT NOT NULL,
+                          ps_availqty INT,
+                          ps_supplycost DECIMAL(12,2),
+                          ps_comment VARCHAR(199),
+                          PRIMARY KEY (ps_partkey, ps_suppkey),
+                          KEY idx_ps_part (ps_partkey),
+                          KEY idx_ps_supp (ps_suppkey),
+                          CONSTRAINT fk_partsupp_part
+                              FOREIGN KEY (ps_partkey) REFERENCES part(p_partkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE,
+                          CONSTRAINT fk_partsupp_supplier
+                              FOREIGN KEY (ps_suppkey) REFERENCES supplier(s_suppkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- LineItem -> Orders + Part + Supplier + Partsupp (composite)
+CREATE TABLE lineitem (
+                          l_orderkey BIGINT NOT NULL,
+                          l_partkey INT NOT NULL,
+                          l_suppkey INT NOT NULL,
+                          l_linenumber INT NOT NULL,
+                          l_quantity DECIMAL(12,2),
+                          l_extendedprice DECIMAL(12,2),
+                          l_discount DECIMAL(12,2),
+                          l_tax DECIMAL(12,2),
+                          l_returnflag CHAR(1),
+                          l_linestatus CHAR(1),
+                          l_shipdate DATE,
+                          l_commitdate DATE,
+                          l_receiptdate DATE,
+                          l_shipinstruct CHAR(25),
+                          l_shipmode CHAR(10),
+                          l_comment varchar(512),
+                          l_comment_crc INT UNSIGNED AS (CRC32(l_comment)) STORED,
+                          PRIMARY KEY (l_orderkey, l_linenumber),
+                          KEY idx_l_comment       (l_comment),
+                          KEY idx_l_comment_crc   (l_comment_crc),
+                          KEY idx_li_order (l_orderkey),
+                          KEY idx_li_part (l_partkey),
+                          KEY idx_li_supp (l_suppkey),
+                          KEY idx_li_part_supp (l_partkey, l_suppkey),
+
+                          CONSTRAINT fk_lineitem_orders
+                              FOREIGN KEY (l_orderkey) REFERENCES orders(o_orderkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE,
+                          CONSTRAINT fk_lineitem_part
+                              FOREIGN KEY (l_partkey) REFERENCES part(p_partkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE,
+                          CONSTRAINT fk_lineitem_supplier
+                              FOREIGN KEY (l_suppkey) REFERENCES supplier(s_suppkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE,
+
+    -- Enforce that (part,supplier) pair exists in partsupp
+                          CONSTRAINT fk_lineitem_partsupp
+                              FOREIGN KEY (l_partkey, l_suppkey)
+                                  REFERENCES partsupp(ps_partkey, ps_suppkey)
+                                  ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 COMMIT;
 ```

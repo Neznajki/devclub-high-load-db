@@ -1,0 +1,10 @@
+on huge databases most dangerous are DROP TABLE, ALTER TABLE. it may result in very dead end
+always use more valid strategies like (CREATE TABLE A_NEW LIKE A),
+optimize new A_NEW. make full structure required by foreign keys like B_new
+optimize tables. import data from existing with small limits during huge time period.
+launch table renaming A >> A_OLD with all required others, A_NEW >> A
+could also continue migrating records for some time to inherit all data.
+
+but again better to just grow structure of tables. As prev approach
+will have problematic gap during renaming you will have magic data losses that needs to be handled
+or stop production server for final sync and renaming table time (5-10 seconds + app boot usually long)
