@@ -26,3 +26,16 @@
 8. Using Memory (Redis) for caching data, Templates, Aggregation tables (5 m)
 9. What data amount could be in High load systems how to optimize text fields (5m)
 10. Grouping functions how to use them (all left time probably 6m)
+
+# cool commands for windows. (after tpch readme make command installation)
+```powershell
+wsl -d Ubuntu -u root
+cd tpch/tpch-dbgen
+apt update
+sudo apt install -y mysql-client
+mysql -h 127.0.0.1 -P 3306 -u root -prootpassword --local-infile=1
+SET GLOBAL local_infile=1; SET PERSIST local_infile=1;
+use appdb
+
+--do data import
+```
