@@ -1,28 +1,16 @@
-ACID vs BASE
-ACID (traditional SQL databases)
-
-Ensures strong consistency and reliability:
+ACID vs BASE ACID (traditional SQL databases) Ensures strong consistency and reliability:
 
 Atomicity
-
 Consistency
-
 Isolation
-
 Durability
 
 Used by: MySQL, PostgreSQL, Oracle, SQL Server, etc.
 
-BASE (mostly NoSQL / distributed systems)
-
-Designed for horizontal scaling and high availability:
-
+BASE (mostly NoSQL / distributed systems) Designed for horizontal scaling and high availability:
 Basically
-
 Available
-
 Soft-state
-
 Eventually consistent
 
 Used by: Cassandra, DynamoDB, Riak, Couchbase, etc.
