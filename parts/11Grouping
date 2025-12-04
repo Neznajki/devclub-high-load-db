@@ -13,4 +13,4 @@ huge dataset index locks, complex scenarios where all PKs are blocked due to gro
 
 Also use record result limiting always. even if you have no grouping, and pick good size of result sets.
 in low datasets you will be okay when you are limiting 100 records as you will have 50, in huge it will save your ass right away
-also there are Pagination and things like that that won't work with GROUPING logic this may lead to full table scan.
+also there are Pagination and things like that won't work with GROUPING logic this may lead to full table scan.
